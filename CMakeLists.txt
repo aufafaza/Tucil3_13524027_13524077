@@ -34,11 +34,11 @@ target_include_directories(sliding_utils PUBLIC include)
 # target_include_directories(sliding_core PUBLIC include)
 # target_include_directories(sliding_ui PUBLIC include)
 
-target_link_libraries(sliding_utils PUBLIC sliding_core)
+# target_link_libraries(sliding_utils PUBLIC sliding_core)
 # target_link_libraries(sliding_core PUBLIC sliding_data)
 # target_link_libraries(sliding_utils PUBLIC sliding_core sliding_data)
 
 # for ui, maybe sfml
 # target_link_libraries(sliding_ui PUBLIC sfml-system sfml-window sfml-graphics)
-# target_link_libraries(sliding PRIVATE sliding_ui)
+target_link_libraries(sliding PRIVATE sliding_utils)
 
