@@ -2,8 +2,9 @@
 
 namespace core {
 
-static const int DR[] = {-1, 1, 0, 0};
-static const int DC[] = {0, 0, -1, 1};
+// direction deltas: index 0=Up, 1=Down, 2=Left, 3=Right
+static const int DR[] = {-1, 1, 0, 0}; // row offset for each direction
+static const int DC[] = {0, 0, -1, 1};  // col offset for each direction
 static const char MOVES[] = {'U', 'D', 'L', 'R'};
 
 Graph::Graph(const fileUtil::PuzzleData& data)
@@ -45,6 +46,10 @@ bool Graph::isBlocked(int row, int col) const {
     return grid_[row][col] == 'X' || grid_[row][col] == 'L';
 }
 
+// visitedBitmask: bit i is 1 if checkpoint i has been collected.
+// example: 0b11 = both checkpoint 0 and 1 collected; 0b01 = only checkpoint 0 collected
+// Checkpoints must be visited in order (0, then 1, then 2, ...),
+// so we find the lowest unset bit as the next required checkpoint.
 int Graph::getNextRequiredCheckpoint(int visitedBitmask) const {
     int idx = 0;
     while (idx < totalCheckpoints_ && (visitedBitmask & (1 << idx))) {
@@ -68,7 +73,7 @@ State Graph::getInitialState() const {
 
 bool Graph::isGoal(const State& state) const {
     return state.pos.row == goalPos_.row && state.pos.col == goalPos_.col
-           && state.visitedCheckpoints == ((1 << totalCheckpoints_) - 1);
+           && state.visitedCheckpoints == ((1 << totalCheckpoints_) - 1); // all bits set = all checkpoints collected
 }
 
 std::vector<Successor> Graph::getSuccessors(const State& state) const {
