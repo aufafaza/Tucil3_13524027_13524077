@@ -66,6 +66,7 @@ public:
 
     Point getStartPos() const;
     Point getGoalPos() const;
+    const std::vector<Point>& getCheckpointPositions() const;
     int getCheckpointCount() const;
     char getTile(int row, int col) const;
     int getWeight(int row, int col) const;
