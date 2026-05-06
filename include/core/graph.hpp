@@ -19,7 +19,6 @@ struct node {
     int g = 0; // dist from start 
     int h = 0; // dist from goal 
     int nextRequiredNumber = 0;
-    
     node* parent = nullptr; 
     char lastMove; 
 
