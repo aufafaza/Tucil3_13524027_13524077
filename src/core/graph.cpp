@@ -126,6 +126,7 @@ std::vector<Successor> Graph::getSuccessors(const State& state) const {
 
 Point Graph::getStartPos() const { return startPos_; }
 Point Graph::getGoalPos() const { return goalPos_; }
+const std::vector<Point>& Graph::getCheckpointPositions() const { return checkpoints_; }
 int Graph::getCheckpointCount() const { return totalCheckpoints_; }
 char Graph::getTile(int row, int col) const { return grid_[row][col]; }
 int Graph::getWeight(int row, int col) const { return weights_[row][col]; }
