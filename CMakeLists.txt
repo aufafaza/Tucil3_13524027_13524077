@@ -10,35 +10,22 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif() 
 
-# add_library( 
-#     sliding_ui STATIC 
-#
-#     # lanjut...
-# )
-
 add_library( 
     sliding_core STATIC 
     src/core/graph.cpp
-    # lanjut...
 )
 
 add_library( 
     sliding_utils STATIC 
     src/utils/fileIO.cpp
-    # lanjut...
 )
 
 add_executable(sliding src/main.cpp) 
-#
+
 target_include_directories(sliding_utils PUBLIC include)
 target_include_directories(sliding_core PUBLIC include)
-# target_include_directories(sliding_ui PUBLIC include)
 
-target_link_libraries(sliding_utils PUBLIC sliding_core)
 target_link_libraries(sliding_core PUBLIC sliding_utils)
-# target_link_libraries(sliding_utils PUBLIC sliding_core sliding_data)
 
-# for ui, maybe sfml
-# target_link_libraries(sliding_ui PUBLIC sfml-system sfml-window sfml-graphics)
-target_link_libraries(sliding PRIVATE sliding_utils)
 
+target_link_libraries(sliding PRIVATE sliding_core)

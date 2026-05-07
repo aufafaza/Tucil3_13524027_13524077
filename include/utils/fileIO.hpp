@@ -12,10 +12,28 @@ struct PuzzleData {
     std::vector<std::vector<int>> cost;
 };
 
+struct SnapshotData {
+    int playerRow;
+    int playerCol;
+    int visitedCheckpoints;
+    char move;
+    int stepNumber;
+};
+
+struct SolutionLogData {
+    std::string algorithmName;
+    int totalSteps;
+    int iterations;
+    long long executionTimeMs;
+    bool found;
+    std::vector<SnapshotData> snapshots;
+};
+
 class fileIO {
 public:
     static PuzzleData readFile(const std::string& filepath);
-    // static int writeFile(const std::string& filepath, const std::string& buffer); // later if needed
+    static void writeSolutionLog(const std::string& filepath, const SolutionLogData& log);
+    static SolutionLogData readSolutionLog(const std::string& filepath);
 };
 
 } // namespace fileUtil
