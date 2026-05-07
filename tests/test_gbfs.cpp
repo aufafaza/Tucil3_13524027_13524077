@@ -1,9 +1,10 @@
 /*
-g++ -std=c++17 -I include/ tests/test_main.cpp src/utils/fileIO.cpp src/core/graph.cpp src/core/algorithm/ucs.cpp -o test_ucs
+g++ -std=c++17 -I include/ tests/test_main.cpp src/utils/fileIO.cpp src/core/graph.cpp src/core/algorithm/gbfs.cpp -o test_gbfs
 */
 #include "utils/fileIO.hpp"
 #include "core/graph.hpp"
 #include "core/algorithm/ucs.hpp"
+#include "core/algorithm/gbfs.hpp"
 #include <iostream>
 #include <string>
 
@@ -70,7 +71,7 @@ int main(int argc, char* argv[]) {
     const std::string filepath = argv[1];
 
     std::cout << "==============================================\n";
-    std::cout << "  UCS Solver — Ice Sliding Puzzle\n";
+    std::cout << "  GBFS Solver — Ice Sliding Puzzle\n";
     std::cout << "==============================================\n";
     std::cout << "File: " << filepath << "\n\n";
 
@@ -90,8 +91,8 @@ int main(int argc, char* argv[]) {
         std::cout << "  CP[" << i << "] = (" << cps[i].row << ", " << cps[i].col << ")\n";
     }
 
-    std::cout << "\nRunning UCS...\n";
-    ui::SolutionLog log = algorithm::runUCS(graph);
+    std::cout << "\nRunning GBFS...\n";
+    ui::SolutionLog log = algorithm::runGBFS(graph);
 
     std::cout << "\n==============================================\n";
     std::cout << "  RESULT\n";
