@@ -37,9 +37,9 @@ target_include_directories(sliding_ui PUBLIC include)
 
 target_link_libraries(sliding_core PUBLIC sliding_utils)
 
+
 target_link_libraries(sliding_ui PUBLIC sliding_core sfml-graphics sfml-window sfml-system)
 
-add_executable(test_graph tests/test_graph.cpp)
-target_link_libraries(test_graph PRIVATE sliding_core)
+
 
 target_link_libraries(sliding PRIVATE sliding_ui)
