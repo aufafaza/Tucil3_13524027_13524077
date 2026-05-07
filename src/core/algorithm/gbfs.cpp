@@ -3,7 +3,7 @@
 #include <queue>
 #include <unordered_map>
 #include <cmath>
-
+#include <algorithm> 
 namespace algorithm {
 
 // heuristik: manhattan distance checkpoint aware

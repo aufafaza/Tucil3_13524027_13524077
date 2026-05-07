@@ -2,7 +2,7 @@
 #include <chrono>
 #include <queue>
 #include <unordered_map>
-
+#include <algorithm> 
 namespace algorithm {
 
 struct UCSNode {
