@@ -15,6 +15,9 @@ find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 add_library( 
     sliding_core STATIC 
     src/core/graph.cpp
+    src/core/algorithm/gbfs.cpp
+    src/core/algorithm/ucs.cpp
+    src/core/algorithm/aStar.cpp
 )
 
 add_library( 
@@ -36,10 +39,5 @@ target_include_directories(sliding_core PUBLIC include)
 target_include_directories(sliding_ui PUBLIC include)
 
 target_link_libraries(sliding_core PUBLIC sliding_utils)
-
-
 target_link_libraries(sliding_ui PUBLIC sliding_core sfml-graphics sfml-window sfml-system)
-
-
-
 target_link_libraries(sliding PRIVATE sliding_ui)
