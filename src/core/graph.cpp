@@ -133,4 +133,21 @@ int Graph::getWeight(int row, int col) const { return weights_[row][col]; }
 int Graph::getRows() const { return rows_; }
 int Graph::getCols() const { return cols_; }
 
+int Graph::getMinWeight() const {
+    int minW = 1;
+    bool found = false;
+    for (int r = 0; r < rows_; r++) {
+        for (int c = 0; c < cols_; c++) {
+            char tile = grid_[r][c];
+            if (tile == 'X' || tile == 'L') continue;
+            int w = weights_[r][c];
+            if (!found || w < minW) {
+                minW = w;
+                found = true;
+            }
+        }
+    }
+    return minW;
+}
+
 } // namespace core

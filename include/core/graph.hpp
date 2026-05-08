@@ -70,6 +70,7 @@ public:
     int getCheckpointCount() const;
     char getTile(int row, int col) const;
     int getWeight(int row, int col) const;
+    int getMinWeight() const;
     int getRows() const;
     int getCols() const;
 };
