@@ -46,10 +46,6 @@ bool Graph::isBlocked(int row, int col) const {
     return grid_[row][col] == 'X' || grid_[row][col] == 'L';
 }
 
-// visitedBitmask: bit i is 1 if checkpoint i has been collected.
-// example: 0b11 = both checkpoint 0 and 1 collected; 0b01 = only checkpoint 0 collected
-// Checkpoints must be visited in order (0, then 1, then 2, ...),
-// so we find the lowest unset bit as the next required checkpoint.
 int Graph::getNextRequiredCheckpoint(int visitedBitmask) const {
     int idx = 0;
     while (idx < totalCheckpoints_ && (visitedBitmask & (1 << idx))) {
@@ -85,40 +81,44 @@ std::vector<Successor> Graph::getSuccessors(const State& state) const {
         int nr = cr + DR[d];
         int nc = cc + DC[d];
 
-        if (!isInBounds(nr, nc) || isBlocked(nr, nc)) {
-            continue;
-        }
+        if (!isInBounds(nr, nc) || grid_[nr][nc] == 'X') continue;
 
         int totalCost = 0;
         int visitedBits = state.visitedCheckpoints;
+        bool gameOver = false;
 
         while (true) {
             nr = cr + DR[d];
             nc = cc + DC[d];
 
-            if (!isInBounds(nr, nc) || isBlocked(nr, nc)) {
-                break;
-            }
+            if (!isInBounds(nr, nc) || grid_[nr][nc] == 'X') break;
 
             cr = nr;
             cc = nc;
             totalCost += weights_[cr][cc];
 
+            if (grid_[cr][cc] == 'L') {
+                gameOver = true;
+                break;
+            }
+
             int cpIdx = getCheckpointIndex(cr, cc);
             if (cpIdx != -1) {
                 int nextReq = getNextRequiredCheckpoint(visitedBits);
-                if (nextReq != -1 && cpIdx == nextReq) {
+                if (cpIdx == nextReq) {
                     visitedBits |= (1 << cpIdx);
+                } else if (visitedBits & (1 << cpIdx)) {
+                } else {
+                    gameOver = true;
+                    break;
                 }
             }
         }
 
-        if (cr == state.pos.row && cc == state.pos.col) {
-            continue;
-        }
+        if (gameOver) continue;
+        if (cr == state.pos.row && cc == state.pos.col) continue;
 
-        State newState = {{cr, cc}, visitedBits};
-        successors.push_back({newState, totalCost, MOVES[d]});
+        successors.emplace_back(Successor{{{cr, cc}, visitedBits}, totalCost, MOVES[d]});
     }
 
     return successors;
