@@ -29,7 +29,10 @@ PuzzleData fileIO::readFile(const std::string& filepath) {
 // Log format:
 // line 1: algorithmName
 // line 2: totalSteps iterations executionTimeMs found(0/1)
-// line 3..N: playerRow playerCol visitedCheckpoints move stepNumber
+// line 3: rows cols
+// line 4..rows+3: board rows (chars, no spaces)
+// line rows+4..2*rows+3: cost rows (tab-separated)
+// then per step: blank line, "Step N [move] visited=M", grid state
 void fileIO::writeSolutionLog(const std::string& filepath, const SolutionLogData& log) {
     std::ofstream file(filepath);
     if (!file.is_open()) {
@@ -37,13 +40,38 @@ void fileIO::writeSolutionLog(const std::string& filepath, const SolutionLogData
     }
 
     file << log.algorithmName << "\n";
-    file << log.totalSteps << " " << log.iterations << " " << log.executionTimeMs << " " << (log.found ? 1 : 0) << "\n";
+    file << log.totalSteps << " " << log.iterations << " "
+         << log.executionTimeMs << " " << (log.found ? 1 : 0) << "\n";
+    file << log.rows << " " << log.cols << "\n";
+
+    for (int r = 0; r < log.rows; r++) {
+        for (int c = 0; c < log.cols; c++)
+            file << log.board[r][c];
+        file << "\n";
+    }
+    for (int r = 0; r < log.rows; r++) {
+        for (int c = 0; c < log.cols; c++) {
+            if (c > 0) file << "\t";
+            file << log.cost[r][c];
+        }
+        file << "\n";
+    }
 
     for (const auto& snap : log.snapshots) {
-        file << snap.playerRow << " " << snap.playerCol << " "
-             << snap.visitedCheckpoints << " " << snap.move << " "
-             << snap.stepNumber << "\n";
+        file << "\n";
+        file << "Step " << snap.stepNumber << " [" << snap.move
+             << "] visited=" << snap.visitedCheckpoints << "\n";
+        for (int r = 0; r < log.rows; r++) {
+            for (int c = 0; c < log.cols; c++) {
+                if (r == snap.playerRow && c == snap.playerCol)
+                    file << 'Z';
+                else
+                    file << log.board[r][c];
+            }
+            file << "\n";
+        }
     }
+    file << "\n--- END ---\n";
 }
 
 SolutionLogData fileIO::readSolutionLog(const std::string& filepath) {
@@ -58,6 +86,18 @@ SolutionLogData fileIO::readSolutionLog(const std::string& filepath) {
     int foundFlag;
     file >> log.totalSteps >> log.iterations >> log.executionTimeMs >> foundFlag;
     log.found = (foundFlag != 0);
+
+    file >> log.rows >> log.cols;
+    log.board.resize(log.rows, std::vector<char>(log.cols));
+    log.cost.resize(log.rows, std::vector<int>(log.cols));
+
+    for (int r = 0; r < log.rows; r++)
+        for (int c = 0; c < log.cols; c++)
+            file >> log.board[r][c];
+
+    for (int r = 0; r < log.rows; r++)
+        for (int c = 0; c < log.cols; c++)
+            file >> log.cost[r][c];
 
     for (int i = 0; i < log.totalSteps; i++) {
         SnapshotData snap;

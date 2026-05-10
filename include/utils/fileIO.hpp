@@ -27,6 +27,10 @@ struct SolutionLogData {
     long long executionTimeMs;
     bool found;
     std::vector<SnapshotData> snapshots;
+    int rows;
+    int cols;
+    std::vector<std::vector<char>> board;
+    std::vector<std::vector<int>> cost;
 };
 
 class fileIO {
