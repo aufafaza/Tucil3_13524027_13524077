@@ -40,16 +40,25 @@ void GridEditor::initGrid() {
 
 void GridEditor::rebuildWindow() {
     float paletteWidth = PALETTE_CELL + PALETTE_GAP + 200.f;
-    float gridW = cols_ * cellSize_;
-    float gridH = rows_ * cellSize_;
-    int winW = static_cast<int>(gridW + paletteWidth + 120);
-    int winH = static_cast<int>(gridH + 220);
+    float leftMargin = 40.f;
+    float topMargin = 120.f;
+    float bottomMargin = 80.f;
+    float availW = static_cast<float>(WIN_W) - leftMargin - paletteWidth - 40.f;
+    float availH = static_cast<float>(WIN_H) - topMargin - bottomMargin;
+    float cellW = availW / static_cast<float>(cols_);
+    float cellH = availH / static_cast<float>(rows_);
+    cellSize_ = std::min(cellW, cellH);
+    if (cellSize_ > 80.f) cellSize_ = 80.f;
+    if (cellSize_ < 16.f) cellSize_ = 16.f;
 
-    gridOffX_ = 40.f;
-    gridOffY_ = 120.f;
+    float gridW = cellSize_ * cols_;
+    float gridH = cellSize_ * rows_;
+    gridOffX_ = leftMargin;
+    gridOffY_ = topMargin + (availH - gridH) / 2.f;
+    if (gridOffY_ < topMargin) gridOffY_ = topMargin;
     paletteOffX_ = gridOffX_ + gridW + 40.f;
 
-    window_.create(sf::VideoMode(winW, winH), "Grid Editor - Sliding Ice Puzzle");
+    window_.create(sf::VideoMode(WIN_W, WIN_H), "Grid Editor - Sliding Ice Puzzle");
     window_.setFramerateLimit(60);
 }
 
@@ -178,6 +187,12 @@ void GridEditor::drawCell(int row, int col) {
     char tile = grid_[row][col];
     float x = gridOffX_ + col * cellSize_;
     float y = gridOffY_ + row * cellSize_;
+    unsigned int fontSize = static_cast<unsigned int>(cellSize_ * 0.35f);
+    if (fontSize < 10) fontSize = 10;
+    if (fontSize > 22) fontSize = 22;
+    unsigned int weightFontSize = static_cast<unsigned int>(cellSize_ * 0.25f);
+    if (weightFontSize < 8) weightFontSize = 8;
+    if (weightFontSize > 16) weightFontSize = 16;
 
     sf::RectangleShape rect(sf::Vector2f(cellSize_ - 2, cellSize_ - 2));
     rect.setPosition(x + 1, y + 1);
@@ -185,45 +200,45 @@ void GridEditor::drawCell(int row, int col) {
     if (tile == 'X') {
         rect.setFillColor(sf::Color(60, 60, 70));
         window_.draw(rect);
-        sf::Text label("X", font_, 18);
-        label.setPosition(x + cellSize_ / 2 - 6, y + cellSize_ / 2 - 10);
+        sf::Text label("X", font_, fontSize);
+        label.setPosition(x + cellSize_ / 2 - label.getLocalBounds().width / 2, y + cellSize_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color(120, 120, 130));
         window_.draw(label);
     } else if (tile == 'L') {
         rect.setFillColor(sf::Color(200, 50, 50));
         window_.draw(rect);
-        sf::Text label("L", font_, 18);
-        label.setPosition(x + cellSize_ / 2 - 5, y + cellSize_ / 2 - 10);
+        sf::Text label("L", font_, fontSize);
+        label.setPosition(x + cellSize_ / 2 - label.getLocalBounds().width / 2, y + cellSize_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color::White);
         window_.draw(label);
     } else if (tile == 'Z') {
         rect.setFillColor(sf::Color(50, 150, 255));
         window_.draw(rect);
-        sf::Text label("Z", font_, 18);
-        label.setPosition(x + cellSize_ / 2 - 5, y + cellSize_ / 2 - 10);
+        sf::Text label("Z", font_, fontSize);
+        label.setPosition(x + cellSize_ / 2 - label.getLocalBounds().width / 2, y + cellSize_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color::White);
         window_.draw(label);
     } else if (tile == 'O') {
         rect.setFillColor(sf::Color(50, 200, 80));
         window_.draw(rect);
-        sf::Text label("O", font_, 18);
-        label.setPosition(x + cellSize_ / 2 - 5, y + cellSize_ / 2 - 10);
+        sf::Text label("O", font_, fontSize);
+        label.setPosition(x + cellSize_ / 2 - label.getLocalBounds().width / 2, y + cellSize_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color::White);
         window_.draw(label);
     } else if (tile >= '0' && tile <= '9') {
         rect.setFillColor(sf::Color(255, 200, 50));
         window_.draw(rect);
         std::string s(1, tile);
-        sf::Text label(s, font_, 22);
-        label.setPosition(x + cellSize_ / 2 - 6, y + cellSize_ / 2 - 12);
+        sf::Text label(s, font_, fontSize);
+        label.setPosition(x + cellSize_ / 2 - label.getLocalBounds().width / 2, y + cellSize_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color::Black);
         window_.draw(label);
     } else {
         rect.setFillColor(sf::Color(180, 200, 220));
         window_.draw(rect);
         if (showWeights_) {
-            sf::Text wt(std::to_string(weights_[row][col]), font_, 14);
-            wt.setPosition(x + cellSize_ / 2 - 6, y + cellSize_ / 2 - 8);
+            sf::Text wt(std::to_string(weights_[row][col]), font_, weightFontSize);
+            wt.setPosition(x + cellSize_ / 2 - wt.getLocalBounds().width / 2, y + cellSize_ / 2 - weightFontSize / 2);
             wt.setFillColor(sf::Color(80, 80, 110));
             window_.draw(wt);
         }

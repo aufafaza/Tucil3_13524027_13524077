@@ -5,15 +5,22 @@ namespace ui {
 
 GameUI::GameUI(const core::Graph& graph, const RenderConfig& config)
     : graph_(graph), config_(config) {
-    int gridPixelW = graph_.getCols() * config_.cellSize;
-    int gridPixelH = graph_.getRows() * config_.cellSize;
-    int winW = gridPixelW + 2 * config_.windowPadding;
-    int winH = gridPixelH + 2 * config_.windowPadding + config_.infoPanelHeight;
+    int winW = config_.windowWidth;
+    int winH = config_.windowHeight;
+    int padding = config_.windowPadding;
 
-    cellWidth_ = static_cast<float>(config_.cellSize);
-    cellHeight_ = static_cast<float>(config_.cellSize);
-    offsetX_ = static_cast<float>(config_.windowPadding);
-    offsetY_ = static_cast<float>(config_.windowPadding);
+    float availW = static_cast<float>(winW - 2 * padding);
+    float availH = static_cast<float>(winH - 2 * padding - config_.infoPanelHeight);
+    float cellW = availW / static_cast<float>(graph_.getCols());
+    float cellH = availH / static_cast<float>(graph_.getRows());
+    cellWidth_ = std::min(cellW, cellH);
+    cellHeight_ = cellWidth_;
+
+    float gridW = cellWidth_ * graph_.getCols();
+    float gridH = cellHeight_ * graph_.getRows();
+    offsetX_ = (static_cast<float>(winW) - gridW) / 2.f;
+    offsetY_ = (static_cast<float>(winH - config_.infoPanelHeight) - gridH) / 2.f;
+    if (offsetY_ < static_cast<float>(padding)) offsetY_ = static_cast<float>(padding);
 
     window_.create(sf::VideoMode(winW, winH), "Sliding Ice Puzzle");
     window_.setFramerateLimit(60);
@@ -31,10 +38,12 @@ GameUI::GameUI(const core::Graph& graph, const RenderConfig& config)
     }
     (void)fontLoaded;
 
+    float infoBarHeight = 50.f;
+    float gridBottom = offsetY_ + gridH + 10.f;
     sliderTrackRect_ = sf::FloatRect(
         offsetX_,
-        offsetY_ + static_cast<float>(gridPixelH) + 80,
-        static_cast<float>(gridPixelW),
+        gridBottom + infoBarHeight,
+        gridW,
         static_cast<float>(config_.sliderHeight)
     );
 
@@ -48,8 +57,17 @@ GameUI::GameUI(const core::Graph& graph, const RenderConfig& config)
 
 void GameUI::drawCell(int row, int col, const Snapshot& snapshot) {
     char tile = graph_.getTile(row, col);
+    float x = offsetX_ + col * cellWidth_;
+    float y = offsetY_ + row * cellHeight_;
+    unsigned int fontSize = static_cast<unsigned int>(cellWidth_ * 0.35f);
+    if (fontSize < 10) fontSize = 10;
+    if (fontSize > 22) fontSize = 22;
+    unsigned int smallFont = static_cast<unsigned int>(cellWidth_ * 0.22f);
+    if (smallFont < 8) smallFont = 8;
+    if (smallFont > 14) smallFont = 14;
+
     sf::RectangleShape rect(sf::Vector2f(cellWidth_ - 2, cellHeight_ - 2));
-    rect.setPosition(offsetX_ + col * cellWidth_ + 1, offsetY_ + row * cellHeight_ + 1);
+    rect.setPosition(x + 1, y + 1);
 
     if (tile == 'X') {
         rect.setFillColor(config_.wallColor);
@@ -60,9 +78,9 @@ void GameUI::drawCell(int row, int col, const Snapshot& snapshot) {
     if (tile == 'L') {
         rect.setFillColor(config_.lavaColor);
         window_.draw(rect);
-        sf::Text label("L", font_, 20);
-        label.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                          rect.getPosition().y + cellHeight_ / 2 - 10);
+        sf::Text label("L", font_, fontSize);
+        label.setPosition(x + cellWidth_ / 2 - label.getLocalBounds().width / 2,
+                          y + cellHeight_ / 2 - fontSize / 2);
         label.setFillColor(sf::Color::White);
         window_.draw(label);
         return;
@@ -73,17 +91,17 @@ void GameUI::drawCell(int row, int col, const Snapshot& snapshot) {
         if (isPlayer) {
             rect.setFillColor(config_.playerColor);
             window_.draw(rect);
-            sf::Text label("P", font_, 22);
-            label.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                              rect.getPosition().y + cellHeight_ / 2 - 12);
+            sf::Text label("P", font_, fontSize);
+            label.setPosition(x + cellWidth_ / 2 - label.getLocalBounds().width / 2,
+                              y + cellHeight_ / 2 - fontSize / 2);
             label.setFillColor(sf::Color::White);
             window_.draw(label);
         } else {
             rect.setFillColor(config_.floorColor);
             window_.draw(rect);
-            sf::Text label("Z", font_, 18);
-            label.setPosition(rect.getPosition().x + cellWidth_ / 2 - 5,
-                              rect.getPosition().y + cellHeight_ / 2 - 10);
+            sf::Text label("Z", font_, fontSize);
+            label.setPosition(x + cellWidth_ / 2 - label.getLocalBounds().width / 2,
+                              y + cellHeight_ / 2 - fontSize / 2);
             label.setFillColor(sf::Color(150, 150, 170));
             window_.draw(label);
         }
@@ -99,48 +117,35 @@ void GameUI::drawCell(int row, int col, const Snapshot& snapshot) {
         if (isPlayer) {
             rect.setFillColor(config_.playerColor);
             window_.draw(rect);
-            sf::Text playerLabel("P", font_, 22);
-            playerLabel.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                                    rect.getPosition().y + cellHeight_ / 2 - 12);
+            sf::Text playerLabel("P", font_, fontSize);
+            playerLabel.setPosition(x + cellWidth_ / 2 - playerLabel.getLocalBounds().width / 2,
+                                    y + cellHeight_ / 2 - fontSize / 2);
             playerLabel.setFillColor(sf::Color::White);
             window_.draw(playerLabel);
 
             std::string cpStr(1, tile);
-            sf::Text cpSmall(cpStr, font_, 12);
-            cpSmall.setPosition(rect.getPosition().x + cellWidth_ - 16,
-                                rect.getPosition().y + 2);
+            sf::Text cpSmall(cpStr, font_, smallFont);
+            cpSmall.setPosition(x + cellWidth_ - cpSmall.getLocalBounds().width - 4, y + 2);
             cpSmall.setFillColor(sf::Color(255, 255, 255, 180));
             window_.draw(cpSmall);
         } else if (visited) {
             rect.setFillColor(config_.visitedCheckpointColor);
             window_.draw(rect);
 
-            sf::CircleShape check(8.f);
-            check.setFillColor(sf::Color(50, 130, 50));
-            check.setPosition(rect.getPosition().x + 4,
-                              rect.getPosition().y + 2);
-            window_.draw(check);
-
             std::string cpStr(1, tile);
-            sf::Text cpNum(cpStr, font_, 22);
-            cpNum.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                              rect.getPosition().y + cellHeight_ / 2 - 4);
+            sf::Text cpNum(cpStr, font_, fontSize);
+            cpNum.setPosition(x + cellWidth_ / 2 - cpNum.getLocalBounds().width / 2,
+                              y + cellHeight_ / 2 - fontSize / 2);
             cpNum.setFillColor(sf::Color::White);
             window_.draw(cpNum);
         } else {
             rect.setFillColor(config_.checkpointColor);
             window_.draw(rect);
 
-            sf::CircleShape circle(10.f);
-            circle.setFillColor(sf::Color(220, 170, 30));
-            circle.setPosition(rect.getPosition().x + cellWidth_ / 2 - 10,
-                               rect.getPosition().y + cellHeight_ / 2 - 10);
-            window_.draw(circle);
-
             std::string cpStr(1, tile);
-            sf::Text cpNum(cpStr, font_, 22);
-            cpNum.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                              rect.getPosition().y + cellHeight_ / 2 - 12);
+            sf::Text cpNum(cpStr, font_, fontSize);
+            cpNum.setPosition(x + cellWidth_ / 2 - cpNum.getLocalBounds().width / 2,
+                              y + cellHeight_ / 2 - fontSize / 2);
             cpNum.setFillColor(sf::Color::Black);
             window_.draw(cpNum);
         }
@@ -152,26 +157,26 @@ void GameUI::drawCell(int row, int col, const Snapshot& snapshot) {
     if (isPlayer) {
         rect.setFillColor(config_.playerColor);
         window_.draw(rect);
-        sf::Text playerLabel("P", font_, 22);
-        playerLabel.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                                rect.getPosition().y + cellHeight_ / 2 - 12);
+        sf::Text playerLabel("P", font_, fontSize);
+        playerLabel.setPosition(x + cellWidth_ / 2 - playerLabel.getLocalBounds().width / 2,
+                                y + cellHeight_ / 2 - fontSize / 2);
         playerLabel.setFillColor(sf::Color::White);
         window_.draw(playerLabel);
     } else if (isGoal) {
         rect.setFillColor(config_.goalColor);
         window_.draw(rect);
-        sf::Text goalLabel("O", font_, 22);
-        goalLabel.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                              rect.getPosition().y + cellHeight_ / 2 - 12);
+        sf::Text goalLabel("O", font_, fontSize);
+        goalLabel.setPosition(x + cellWidth_ / 2 - goalLabel.getLocalBounds().width / 2,
+                              y + cellHeight_ / 2 - fontSize / 2);
         goalLabel.setFillColor(sf::Color::White);
         window_.draw(goalLabel);
     } else {
         rect.setFillColor(config_.floorColor);
         window_.draw(rect);
         if (tile == '*' && showWeights_) {
-            sf::Text weightLabel(std::to_string(graph_.getWeight(row, col)), font_, 14);
-            weightLabel.setPosition(rect.getPosition().x + cellWidth_ / 2 - 6,
-                                   rect.getPosition().y + cellHeight_ / 2 - 8);
+            sf::Text weightLabel(std::to_string(graph_.getWeight(row, col)), font_, smallFont);
+            weightLabel.setPosition(x + cellWidth_ / 2 - weightLabel.getLocalBounds().width / 2,
+                                    y + cellHeight_ / 2 - smallFont / 2);
             weightLabel.setFillColor(sf::Color(80, 80, 110));
             window_.draw(weightLabel);
         }
@@ -185,8 +190,8 @@ void GameUI::drawGrid(const Snapshot& snapshot) {
 }
 
 void GameUI::drawInfoPanel(const PlaybackController& controller) {
-    int gridPixelH = graph_.getRows() * config_.cellSize;
-    float panelY = offsetY_ + static_cast<float>(gridPixelH) + 10;
+    float gridH = cellHeight_ * graph_.getRows();
+    float panelY = offsetY_ + gridH + 10;
 
     std::ostringstream oss;
     const Snapshot& snap = controller.current();

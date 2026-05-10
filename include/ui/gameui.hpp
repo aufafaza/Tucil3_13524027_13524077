@@ -7,7 +7,8 @@
 namespace ui {
 
 struct RenderConfig {
-    int cellSize = 80;
+    int windowWidth = 1200;
+    int windowHeight = 800;
     int windowPadding = 40;
     int infoPanelHeight = 160;
     int sliderHeight = 30;

@@ -43,6 +43,8 @@ private:
     float gridOffY_;
     float paletteOffX_;
 
+    static constexpr int WIN_W = 1200;
+    static constexpr int WIN_H = 800;
     static constexpr float PALETTE_CELL = 48.f;
     static constexpr float PALETTE_GAP = 6.f;
 
