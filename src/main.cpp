@@ -79,7 +79,6 @@ static void runGame(const fileUtil::PuzzleData& pz, ui::AlgorithmChoice algo) {
     saveLog(log, pz);
 
     ui::RenderConfig config;
-    config.cellSize = 80;
     ui::GameUI ui(graph, config);
     ui.run(log);
 }
