@@ -6,6 +6,13 @@
 
 namespace ui {
 
+enum class AlgorithmChoice {
+    NONE = 0,
+    UCS = 1,
+    ASTAR = 2,
+    GBFS = 3
+};
+
 struct EditorPaletteEntry {
     char tile;
     std::string label;
@@ -22,12 +29,14 @@ private:
     int selectedPalette_ = 0;
     int checkpointNumber_ = 0;
     bool showWeights_ = true;
-    bool editMode_ = true;
 
     bool dialogOpen_ = false;
     bool dialogIsSave_ = false;
     std::string dialogPath_ = "puzzle_output.txt";
     std::string dialogStatus_;
+
+    bool algoDialogOpen_ = false;
+    AlgorithmChoice selectedAlgorithm_ = AlgorithmChoice::NONE;
 
     float cellSize_;
     float gridOffX_;
@@ -52,9 +61,11 @@ private:
     void drawCell(int row, int col);
     void drawPalette();
     void drawToolbar();
+    void drawToolbarButtons();
     void drawWeightToggle();
     void drawSizeControls();
     void drawDialog();
+    void drawAlgorithmDialog();
 
     void paintCell(int row, int col);
     void cycleWeight(int row, int col);
@@ -63,13 +74,16 @@ private:
     void ensureValidGrid();
 
     bool isInsideGrid(int row, int col) const;
+    void drawButton(float x, float y, float w, float h, const std::string& label,
+                    const sf::Color& bg, const sf::Color& outline, bool hovered);
 
-bool playRequested_ = false;
+    bool playRequested_ = false;
 
 public:
     GridEditor();
 
     fileUtil::PuzzleData getResult() const;
+    AlgorithmChoice getSelectedAlgorithm() const;
     bool run();
 };
 

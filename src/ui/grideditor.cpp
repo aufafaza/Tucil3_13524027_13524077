@@ -326,24 +326,15 @@ void GridEditor::drawToolbar() {
     hint.setFillColor(sf::Color(160, 160, 170));
     window_.draw(hint);
 
-    sf::Text hint2("S:Save  L:Load  R:Reset  W:Weights  Enter:Play", font_, 13);
+    sf::Text hint2("S:Save  L:Load  R:Reset  W:Weights", font_, 13);
     hint2.setPosition(gridOffX_, 60);
     hint2.setFillColor(sf::Color(160, 160, 170));
     window_.draw(hint2);
 
-    float playBtnX = gridOffX_ + gridOffX_ + cols_ * cellSize_ + 40;
-    float playBtnY = 10.f;
-    sf::RectangleShape playBtn(sf::Vector2f(100.f, 34.f));
-    playBtn.setPosition(playBtnX, playBtnY);
-    playBtn.setFillColor(sf::Color(50, 160, 50));
-    playBtn.setOutlineColor(sf::Color(80, 200, 80));
-    playBtn.setOutlineThickness(2.f);
-    window_.draw(playBtn);
-
-    sf::Text playLabel("PLAY", font_, 20);
-    playLabel.setPosition(playBtnX + 22, playBtnY + 5);
-    playLabel.setFillColor(sf::Color::White);
-    window_.draw(playLabel);
+    sf::Text hint3("PLAY button or Enter to select algorithm", font_, 13);
+    hint3.setPosition(gridOffX_, 78);
+    hint3.setFillColor(sf::Color(100, 200, 100));
+    window_.draw(hint3);
 }
 
 void GridEditor::drawWeightToggle() {
@@ -502,6 +493,151 @@ void GridEditor::drawDialog() {
     }
 }
 
+void GridEditor::drawButton(float x, float y, float w, float h, const std::string& label,
+                            const sf::Color& bg, const sf::Color& outline, bool hovered) {
+    sf::RectangleShape rect(sf::Vector2f(w, h));
+    rect.setPosition(x, y);
+    sf::Color fillBg = hovered
+        ? sf::Color(std::min(static_cast<int>(bg.r) + 30, 255),
+                    std::min(static_cast<int>(bg.g) + 30, 255),
+                    std::min(static_cast<int>(bg.b) + 30, 255))
+        : bg;
+    rect.setFillColor(fillBg);
+    rect.setOutlineColor(outline);
+    rect.setOutlineThickness(1.f);
+    window_.draw(rect);
+
+    if (!label.empty()) {
+        sf::Text btnLabel(label, font_, 16);
+        float textW = btnLabel.getLocalBounds().width;
+        float textH = btnLabel.getLocalBounds().height;
+        btnLabel.setPosition(x + (w - textW) / 2, y + (h - textH) / 2 - 2);
+        btnLabel.setFillColor(sf::Color::White);
+        window_.draw(btnLabel);
+    }
+}
+
+void GridEditor::drawToolbarButtons() {
+    float btnW = 80.f;
+    float btnH = 30.f;
+    float btnGap = 10.f;
+    float startX = static_cast<float>(window_.getSize().x) - 3 * btnW - 2 * btnGap - 20.f;
+    float btnY = 15.f;
+
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window_);
+    float mx = static_cast<float>(mousePos.x);
+    float my = static_cast<float>(mousePos.y);
+
+    sf::FloatRect loadRect(startX, btnY, btnW, btnH);
+    drawButton(startX, btnY, btnW, btnH, "LOAD",
+               sf::Color(70, 80, 110), sf::Color(140, 140, 180),
+               loadRect.contains(mx, my));
+
+    float saveX = startX + btnW + btnGap;
+    sf::FloatRect saveRect(saveX, btnY, btnW, btnH);
+    drawButton(saveX, btnY, btnW, btnH, "SAVE",
+               sf::Color(70, 80, 110), sf::Color(140, 140, 180),
+               saveRect.contains(mx, my));
+
+    float playX = saveX + btnW + btnGap;
+    sf::FloatRect playRect(playX, btnY, btnW, btnH);
+    drawButton(playX, btnY, btnW, btnH, "PLAY",
+               sf::Color(50, 120, 50), sf::Color(100, 200, 100),
+               playRect.contains(mx, my));
+}
+
+void GridEditor::drawAlgorithmDialog() {
+    sf::RectangleShape overlay(sf::Vector2f(static_cast<float>(window_.getSize().x),
+                                             static_cast<float>(window_.getSize().y)));
+    overlay.setFillColor(sf::Color(0, 0, 0, 150));
+    window_.draw(overlay);
+
+    float boxW = 400.f;
+    float boxH = 320.f;
+    float boxX = (static_cast<float>(window_.getSize().x) - boxW) / 2.f;
+    float boxY = (static_cast<float>(window_.getSize().y) - boxH) / 2.f;
+
+    sf::RectangleShape box(sf::Vector2f(boxW, boxH));
+    box.setPosition(boxX, boxY);
+    box.setFillColor(sf::Color(40, 40, 55));
+    box.setOutlineColor(sf::Color(120, 140, 200));
+    box.setOutlineThickness(2.f);
+    window_.draw(box);
+
+    sf::Text title("Select Algorithm", font_, 22);
+    title.setPosition(boxX + 20, boxY + 15);
+    title.setFillColor(sf::Color(220, 220, 240));
+    window_.draw(title);
+
+    sf::Text hint("Esc: Cancel", font_, 13);
+    hint.setPosition(boxX + 20, boxY + 45);
+    hint.setFillColor(sf::Color(140, 140, 160));
+    window_.draw(hint);
+
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window_);
+    float mx = static_cast<float>(mousePos.x);
+    float my = static_cast<float>(mousePos.y);
+
+    float optY = boxY + 70;
+    float optW = boxW - 40;
+    float optH = 50.f;
+    float optGap = 8.f;
+
+    struct AlgoOption {
+        AlgorithmChoice choice;
+        const char* name;
+        const char* desc;
+        sf::Color color;
+    };
+
+    AlgoOption options[] = {
+        {AlgorithmChoice::UCS, "UCS", "Uniform Cost Search", sf::Color(70, 100, 160)},
+        {AlgorithmChoice::ASTAR, "A*", "A* Search", sf::Color(70, 130, 70)},
+        {AlgorithmChoice::GBFS, "GBFS", "Greedy Best-First Search", sf::Color(140, 80, 140)},
+    };
+
+    for (int i = 0; i < 3; i++) {
+        float y = optY + i * (optH + optGap);
+        bool selected = (selectedAlgorithm_ == options[i].choice);
+        bool hovered = sf::FloatRect(boxX + 20, y, optW, optH).contains(mx, my);
+
+        sf::Color bg = options[i].color;
+        if (selected) bg = sf::Color(std::min(static_cast<int>(bg.r) + 50, 255),
+                                     std::min(static_cast<int>(bg.g) + 50, 255),
+                                     std::min(static_cast<int>(bg.b) + 50, 255));
+        else if (hovered) bg = sf::Color(std::min(static_cast<int>(bg.r) + 25, 255),
+                                          std::min(static_cast<int>(bg.g) + 25, 255),
+                                          std::min(static_cast<int>(bg.b) + 25, 255));
+
+        drawButton(boxX + 20, y, optW, optH, "", bg,
+                   selected ? sf::Color(255, 255, 100) : sf::Color(100, 100, 130), hovered);
+
+        sf::Text nameText(options[i].name, font_, 20);
+        nameText.setPosition(boxX + 35, y + 8);
+        nameText.setFillColor(sf::Color::White);
+        window_.draw(nameText);
+
+        sf::Text descText(options[i].desc, font_, 13);
+        descText.setPosition(boxX + 35, y + 30);
+        descText.setFillColor(sf::Color(180, 180, 200));
+        window_.draw(descText);
+    }
+
+    float playBtnY = boxY + boxH - 55;
+    float playBtnW = 160.f;
+    float playBtnH = 40.f;
+    float playBtnX = boxX + (boxW - playBtnW) / 2;
+    bool canPlay = selectedAlgorithm_ != AlgorithmChoice::NONE;
+    sf::Color playBg = canPlay ? sf::Color(50, 140, 50) : sf::Color(80, 80, 80);
+    bool playHover = canPlay && sf::FloatRect(playBtnX, playBtnY, playBtnW, playBtnH).contains(mx, my);
+    drawButton(playBtnX, playBtnY, playBtnW, playBtnH, "PLAY", playBg,
+               canPlay ? sf::Color(100, 200, 100) : sf::Color(100, 100, 100), playHover);
+}
+
+AlgorithmChoice GridEditor::getSelectedAlgorithm() const {
+    return selectedAlgorithm_;
+}
+
 fileUtil::PuzzleData GridEditor::getResult() const {
     fileUtil::PuzzleData result;
     result.rows = rows_;
@@ -550,6 +686,10 @@ bool GridEditor::run() {
                     } else if (event.key.code == sf::Keyboard::Backspace) {
                         if (!dialogPath_.empty()) dialogPath_.pop_back();
                     }
+                } else if (algoDialogOpen_) {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        algoDialogOpen_ = false;
+                    }
                 } else {
                     switch (event.key.code) {
                         case sf::Keyboard::W:
@@ -571,9 +711,7 @@ bool GridEditor::run() {
                             dialogStatus_.clear();
                             break;
                         case sf::Keyboard::Return:
-                            playRequested_ = true;
-                            ensureValidGrid();
-                            window_.close();
+                            algoDialogOpen_ = true;
                             break;
                         case sf::Keyboard::Escape:
                             window_.close();
@@ -586,72 +724,123 @@ bool GridEditor::run() {
                 if (event.text.unicode >= 32 && event.text.unicode < 127) {
                     dialogPath_ += static_cast<char>(event.text.unicode);
                 }
-            } else if (event.type == sf::Event::MouseButtonPressed && !dialogOpen_) {
-                float mx = static_cast<float>(event.mouseButton.x);
-                float my = static_cast<float>(event.mouseButton.y);
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                if (algoDialogOpen_ && !dialogOpen_) {
+                    float mx = static_cast<float>(event.mouseButton.x);
+                    float my = static_cast<float>(event.mouseButton.y);
 
-                float playBtnX = gridOffX_ + gridOffX_ + cols_ * cellSize_ + 40;
-                sf::FloatRect playBtnRect(playBtnX, 10.f, 100.f, 34.f);
-                if (playBtnRect.contains(mx, my)) {
-                    playRequested_ = true;
-                    ensureValidGrid();
-                    window_.close();
-                }
+                    float boxW = 400.f;
+                    float boxH = 320.f;
+                    float boxX = (static_cast<float>(window_.getSize().x) - boxW) / 2.f;
+                    float boxY = (static_cast<float>(window_.getSize().y) - boxH) / 2.f;
 
-                int palIdx = getPaletteFromMouse(event.mouseButton.x, event.mouseButton.y);
-                if (palIdx >= 0) {
-                    if (palette_[palIdx].tile == 'C') {
-                        float ddX = paletteOffX_ + PALETTE_CELL + 100;
-                        float py = gridOffY_ + palIdx * (PALETTE_CELL + PALETTE_GAP);
-                        float ddW = 90.f;
-                        sf::FloatRect upRect(ddX + ddW - 26, py, 26, PALETTE_CELL / 2);
-                        sf::FloatRect downRect(ddX + ddW - 26, py + PALETTE_CELL / 2, 26, PALETTE_CELL / 2);
+                    float optY = boxY + 70;
+                    float optW = boxW - 40;
+                    float optH = 50.f;
+                    float optGap = 8.f;
 
-                        if (upRect.contains(mx, my)) {
-                            checkpointNumber_++;
-                            if (checkpointNumber_ > 9) checkpointNumber_ = 0;
-                        } else if (downRect.contains(mx, my)) {
-                            checkpointNumber_--;
-                            if (checkpointNumber_ < 0) checkpointNumber_ = 9;
-                        } else {
-                            selectedPalette_ = palIdx;
+                    AlgorithmChoice choices[] = {AlgorithmChoice::UCS, AlgorithmChoice::ASTAR, AlgorithmChoice::GBFS};
+                    for (int i = 0; i < 3; i++) {
+                        float y = optY + i * (optH + optGap);
+                        sf::FloatRect optRect(boxX + 20, y, optW, optH);
+                        if (optRect.contains(mx, my)) {
+                            selectedAlgorithm_ = choices[i];
                         }
+                    }
+
+                    float playBtnY = boxY + boxH - 55;
+                    float playBtnW = 160.f;
+                    float playBtnH = 40.f;
+                    float playBtnX = boxX + (boxW - playBtnW) / 2;
+                    if (selectedAlgorithm_ != AlgorithmChoice::NONE &&
+                        sf::FloatRect(playBtnX, playBtnY, playBtnW, playBtnH).contains(mx, my)) {
+                        playRequested_ = true;
+                        ensureValidGrid();
+                        window_.close();
+                    }
+                } else if (!dialogOpen_ && !algoDialogOpen_) {
+                    float mx = static_cast<float>(event.mouseButton.x);
+                    float my = static_cast<float>(event.mouseButton.y);
+
+                    float tbBtnW = 80.f;
+                    float tbBtnH = 30.f;
+                    float tbBtnGap = 10.f;
+                    float tbStartX = static_cast<float>(window_.getSize().x) - 3 * tbBtnW - 2 * tbBtnGap - 20.f;
+                    float tbBtnY = 15.f;
+
+                    sf::FloatRect loadRect(tbStartX, tbBtnY, tbBtnW, tbBtnH);
+                    sf::FloatRect saveRect(tbStartX + tbBtnW + tbBtnGap, tbBtnY, tbBtnW, tbBtnH);
+                    sf::FloatRect playRect(tbStartX + 2 * (tbBtnW + tbBtnGap), tbBtnY, tbBtnW, tbBtnH);
+
+                    if (loadRect.contains(mx, my)) {
+                        dialogOpen_ = true;
+                        dialogIsSave_ = false;
+                        dialogPath_ = "";
+                        dialogStatus_.clear();
+                    } else if (saveRect.contains(mx, my)) {
+                        dialogOpen_ = true;
+                        dialogIsSave_ = true;
+                        dialogPath_ = "puzzle_output.txt";
+                        dialogStatus_.clear();
+                    } else if (playRect.contains(mx, my)) {
+                        algoDialogOpen_ = true;
                     } else {
-                        selectedPalette_ = palIdx;
-                    }
-                } else {
-                    auto [row, col] = getCellFromMouse(event.mouseButton.x, event.mouseButton.y);
-                    if (isInsideGrid(row, col)) {
-                        if (event.mouseButton.button == sf::Mouse::Left) {
-                            paintCell(row, col);
-                        } else if (event.mouseButton.button == sf::Mouse::Right) {
-                            cycleWeight(row, col);
+                        int palIdx = getPaletteFromMouse(event.mouseButton.x, event.mouseButton.y);
+                        if (palIdx >= 0) {
+                            if (palette_[palIdx].tile == 'C') {
+                                float ddX = paletteOffX_ + PALETTE_CELL + 100;
+                                float py = gridOffY_ + palIdx * (PALETTE_CELL + PALETTE_GAP);
+                                float ddW = 90.f;
+                                sf::FloatRect upRect(ddX + ddW - 26, py, 26, PALETTE_CELL / 2);
+                                sf::FloatRect downRect(ddX + ddW - 26, py + PALETTE_CELL / 2, 26, PALETTE_CELL / 2);
+
+                                if (upRect.contains(mx, my)) {
+                                    checkpointNumber_++;
+                                    if (checkpointNumber_ > 9) checkpointNumber_ = 0;
+                                } else if (downRect.contains(mx, my)) {
+                                    checkpointNumber_--;
+                                    if (checkpointNumber_ < 0) checkpointNumber_ = 9;
+                                } else {
+                                    selectedPalette_ = palIdx;
+                                }
+                            } else {
+                                selectedPalette_ = palIdx;
+                            }
+                        } else {
+                            auto [row, col] = getCellFromMouse(event.mouseButton.x, event.mouseButton.y);
+                            if (isInsideGrid(row, col)) {
+                                if (event.mouseButton.button == sf::Mouse::Left) {
+                                    paintCell(row, col);
+                                } else if (event.mouseButton.button == sf::Mouse::Right) {
+                                    cycleWeight(row, col);
+                                }
+                            }
+                        }
+
+                        float weightBtnY = gridOffY_ + rows_ * cellSize_ + 20;
+                        sf::FloatRect weightBtnRect(gridOffX_, weightBtnY, 140.f, 30.f);
+                        if (weightBtnRect.contains(mx, my)) {
+                            showWeights_ = !showWeights_;
+                        }
+
+                        float sizeBtnY = gridOffY_ + rows_ * cellSize_ + 55;
+                        sf::FloatRect rowUpRect(gridOffX_ + 215, sizeBtnY, 34, 26);
+                        sf::FloatRect rowDownRect(gridOffX_ + 255, sizeBtnY, 34, 26);
+                        sf::FloatRect colUpRect(gridOffX_ + 315, sizeBtnY, 34, 26);
+                        sf::FloatRect colDownRect(gridOffX_ + 355, sizeBtnY, 34, 26);
+
+                        if (rowUpRect.contains(mx, my) && rows_ < 20) {
+                            rows_++; initGrid(); rebuildWindow();
+                        } else if (rowDownRect.contains(mx, my) && rows_ > 3) {
+                            rows_--; initGrid(); rebuildWindow();
+                        } else if (colUpRect.contains(mx, my) && cols_ < 20) {
+                            cols_++; initGrid(); rebuildWindow();
+                        } else if (colDownRect.contains(mx, my) && cols_ > 3) {
+                            cols_--; initGrid(); rebuildWindow();
                         }
                     }
                 }
-
-                float weightBtnY = gridOffY_ + rows_ * cellSize_ + 20;
-                sf::FloatRect weightBtnRect(gridOffX_, weightBtnY, 140.f, 30.f);
-                if (weightBtnRect.contains(mx, my)) {
-                    showWeights_ = !showWeights_;
-                }
-
-                float sizeBtnY = gridOffY_ + rows_ * cellSize_ + 55;
-                sf::FloatRect rowUpRect(gridOffX_ + 215, sizeBtnY, 34, 26);
-                sf::FloatRect rowDownRect(gridOffX_ + 255, sizeBtnY, 34, 26);
-                sf::FloatRect colUpRect(gridOffX_ + 315, sizeBtnY, 34, 26);
-                sf::FloatRect colDownRect(gridOffX_ + 355, sizeBtnY, 34, 26);
-
-                if (rowUpRect.contains(mx, my) && rows_ < 20) {
-                    rows_++; initGrid(); rebuildWindow();
-                } else if (rowDownRect.contains(mx, my) && rows_ > 3) {
-                    rows_--; initGrid(); rebuildWindow();
-                } else if (colUpRect.contains(mx, my) && cols_ < 20) {
-                    cols_++; initGrid(); rebuildWindow();
-                } else if (colDownRect.contains(mx, my) && cols_ > 3) {
-                    cols_--; initGrid(); rebuildWindow();
-                }
-            } else if (event.type == sf::Event::MouseWheelScrolled && !dialogOpen_) {
+            } else if (event.type == sf::Event::MouseWheelScrolled && !dialogOpen_ && !algoDialogOpen_) {
                 int palIdx = getPaletteFromMouse(event.mouseWheelScroll.x, event.mouseWheelScroll.y);
                 if (palIdx >= 0 && palette_[palIdx].tile == 'C') {
                     if (event.mouseWheelScroll.delta > 0) {
@@ -665,7 +854,7 @@ bool GridEditor::run() {
             }
         }
 
-        if (!dialogOpen_ && sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        if (!dialogOpen_ && !algoDialogOpen_ && sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             sf::Vector2i pos = sf::Mouse::getPosition(window_);
             auto [row, col] = getCellFromMouse(pos.x, pos.y);
             if (isInsideGrid(row, col)) {
@@ -675,12 +864,16 @@ bool GridEditor::run() {
 
         window_.clear(sf::Color(30, 30, 40));
         drawToolbar();
+        drawToolbarButtons();
         drawGrid();
         drawPalette();
         drawWeightToggle();
         drawSizeControls();
         if (dialogOpen_) {
             drawDialog();
+        }
+        if (algoDialogOpen_) {
+            drawAlgorithmDialog();
         }
         window_.display();
     }
